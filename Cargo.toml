@@ -1,0 +1,26 @@
+[package]
+name = "rotamer"
+version = "0.1.0"
+authors = ["Tony Kan <tianchengkan@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/TKanX/rotamer"
+edition = "2024"
+description = "A zero-cost Rust library for NERF sidechain geometry reconstruction with placement of heavy and polar-H atoms from backbone (C,N,Cα) and χ angles using compile-time ideal geometry, stack-only output, sealed const-generic traits per residue and zero heap allocation."
+keywords = ["biology", "bioinformatics", "chemistry", "protein", "no-std"]
+categories = ["science::computational-biology::structural-modeling", "no-std"]
+readme = "README.md"
+
+[dev-dependencies]
+approx = "0.5.1"
+criterion = "0.5.1"
+paste = "1.0.15"
+
+[lib]
+name = "rotamer"
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
