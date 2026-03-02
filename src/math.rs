@@ -156,3 +156,306 @@ impl core::ops::Mul<f32> for Vec3 {
         Self::new(self.x * s, self.y * s, self.z * s)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn rsqrtf_one() {
+        assert_relative_eq!(rsqrtf(1.0), 1.0, max_relative = 1.5e-7);
+    }
+
+    #[test]
+    fn rsqrtf_four() {
+        assert_relative_eq!(rsqrtf(4.0), 0.5, max_relative = 1.5e-7);
+    }
+
+    #[test]
+    fn rsqrtf_nine() {
+        assert_relative_eq!(rsqrtf(9.0), 1.0 / 3.0, max_relative = 1.5e-7);
+    }
+
+    #[test]
+    fn rsqrtf_max_error() {
+        let mut max_rel_err = 0.0_f64;
+        for exp in -60_i32..=60 {
+            for k in 0_u32..1000 {
+                let x = (2.0_f64).powi(exp) * (1.0 + k as f64 / 1000.0);
+                let x_f = x as f32;
+                if x_f <= 0.0 || !x_f.is_finite() {
+                    continue;
+                }
+                let got = rsqrtf(x_f) as f64;
+                let expected = 1.0 / x.sqrt();
+                let rel = (got - expected).abs() / expected;
+                if rel > max_rel_err {
+                    max_rel_err = rel;
+                }
+            }
+        }
+        assert!(
+            max_rel_err < 1.5e-7,
+            "max rsqrtf relative error {max_rel_err:.2e} exceeds 1.5e-7"
+        );
+    }
+
+    #[test]
+    fn sincosf_zero() {
+        let (s, c) = sincosf(0.0);
+        assert_relative_eq!(s, 0.0, max_relative = 5e-7, epsilon = 1e-7);
+        assert_relative_eq!(c, 1.0, max_relative = 5e-7);
+    }
+
+    #[test]
+    fn sincosf_pi_over_6() {
+        let (s, c) = sincosf(core::f32::consts::FRAC_PI_6);
+        assert_relative_eq!(s, 0.5, max_relative = 5e-7);
+        assert_relative_eq!(c, 3.0_f32.sqrt() / 2.0, max_relative = 5e-7);
+    }
+
+    #[test]
+    fn sincosf_pi_over_4() {
+        let (s, c) = sincosf(core::f32::consts::FRAC_PI_4);
+        let root2_over2 = core::f32::consts::FRAC_1_SQRT_2;
+        assert_relative_eq!(s, root2_over2, max_relative = 5e-7);
+        assert_relative_eq!(c, root2_over2, max_relative = 5e-7);
+    }
+
+    #[test]
+    fn sincosf_pi_over_2() {
+        let (s, c) = sincosf(FRAC_PI_2);
+        assert_relative_eq!(s, 1.0, max_relative = 5e-7);
+        assert_relative_eq!(c, 0.0, max_relative = 5e-7, epsilon = 1e-7);
+    }
+
+    #[test]
+    fn sincosf_pi() {
+        let (s, c) = sincosf(core::f32::consts::PI);
+        assert_relative_eq!(s, 0.0, max_relative = 5e-7, epsilon = 1e-7);
+        assert_relative_eq!(c, -1.0, max_relative = 5e-7);
+    }
+
+    #[test]
+    fn sincosf_3pi_over_2() {
+        let (s, c) = sincosf(3.0 * FRAC_PI_2);
+        assert_relative_eq!(s, -1.0, max_relative = 5e-7);
+        assert_relative_eq!(c, 0.0, max_relative = 5e-7, epsilon = 1e-7);
+    }
+
+    #[test]
+    fn sincosf_sin_odd() {
+        for &x in &[0.3_f32, 1.0, 2.5, core::f32::consts::PI] {
+            let (s_pos, _) = sincosf(x);
+            let (s_neg, _) = sincosf(-x);
+            assert_relative_eq!(s_neg, -s_pos, max_relative = 1e-6, epsilon = 1e-7);
+        }
+    }
+
+    #[test]
+    fn sincosf_cos_even() {
+        for &x in &[0.3_f32, 1.0, 2.5, core::f32::consts::PI] {
+            let (_, c_pos) = sincosf(x);
+            let (_, c_neg) = sincosf(-x);
+            assert_relative_eq!(c_neg, c_pos, max_relative = 1e-6, epsilon = 1e-7);
+        }
+    }
+
+    #[test]
+    fn sincosf_pythagorean_identity() {
+        let test_angles: &[f32] = &[
+            0.0,
+            0.1,
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0,
+            -0.1,
+            -1.0,
+            -2.0,
+            -3.0,
+            FRAC_PI_2,
+            core::f32::consts::PI,
+            3.0 * FRAC_PI_2,
+        ];
+        for &x in test_angles {
+            let (s, c) = sincosf(x);
+            let norm_sq = s * s + c * c;
+            assert!(
+                (norm_sq - 1.0).abs() < 1e-6,
+                "sin²+cos² = {norm_sq:.8} at x = {x:.4}, deviation {:.2e}",
+                (norm_sq - 1.0).abs()
+            );
+        }
+    }
+
+    #[test]
+    fn sincosf_quadrant_signs() {
+        let (s, c) = sincosf(core::f32::consts::FRAC_PI_4);
+        assert!(s > 0.0 && c > 0.0);
+        let (s, c) = sincosf(3.0 * core::f32::consts::FRAC_PI_4);
+        assert!(s > 0.0 && c < 0.0);
+        let (s, c) = sincosf(-3.0 * core::f32::consts::FRAC_PI_4);
+        assert!(s < 0.0 && c < 0.0);
+        let (s, c) = sincosf(-core::f32::consts::FRAC_PI_4);
+        assert!(s < 0.0 && c > 0.0);
+    }
+
+    #[test]
+    fn sincosf_max_error() {
+        let mut max_err_sin = 0.0_f32;
+        let mut max_err_cos = 0.0_f32;
+        let n = 100_000_u32;
+        let range = 2.0 * core::f32::consts::PI;
+        for i in 0..=n {
+            let x = -range + 2.0 * range * i as f32 / n as f32;
+            let (s, c) = sincosf(x);
+            let err_s = (s - x.sin()).abs();
+            let err_c = (c - x.cos()).abs();
+            if err_s > max_err_sin {
+                max_err_sin = err_s;
+            }
+            if err_c > max_err_cos {
+                max_err_cos = err_c;
+            }
+        }
+        assert!(
+            max_err_sin < 5e-7,
+            "max sin error {max_err_sin:.2e} over [-2π,2π] exceeds 5e-7"
+        );
+        assert!(
+            max_err_cos < 5e-7,
+            "max cos error {max_err_cos:.2e} over [-2π,2π] exceeds 5e-7"
+        );
+    }
+
+    #[test]
+    fn vec3_add() {
+        let a = Vec3::new(1.0, 2.0, 3.0);
+        let b = Vec3::new(4.0, 5.0, 6.0);
+        let c = a + b;
+        assert_eq!(c, Vec3::new(5.0, 7.0, 9.0));
+    }
+
+    #[test]
+    fn vec3_sub() {
+        let a = Vec3::new(5.0, 7.0, 9.0);
+        let b = Vec3::new(4.0, 5.0, 6.0);
+        assert_eq!(a - b, Vec3::new(1.0, 2.0, 3.0));
+    }
+
+    #[test]
+    fn vec3_neg() {
+        let v = Vec3::new(1.0, -2.0, 3.0);
+        assert_eq!(-v, Vec3::new(-1.0, 2.0, -3.0));
+    }
+
+    #[test]
+    fn vec3_mul_scalar() {
+        let v = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(v * 2.0, Vec3::new(2.0, 4.0, 6.0));
+    }
+
+    #[test]
+    fn vec3_zero() {
+        const Z: Vec3 = Vec3::zero();
+        assert_eq!(Z, Vec3::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn vec3_dot_perpendicular() {
+        let x = Vec3::new(1.0, 0.0, 0.0);
+        let y = Vec3::new(0.0, 1.0, 0.0);
+        assert_eq!(x.dot(y), 0.0);
+    }
+
+    #[test]
+    fn vec3_dot_self() {
+        let v = Vec3::new(3.0, 4.0, 0.0);
+        assert_relative_eq!(v.dot(v), v.len_sq(), max_relative = 1e-6);
+    }
+
+    #[test]
+    fn vec3_cross_basis() {
+        let ex = Vec3::new(1.0, 0.0, 0.0);
+        let ey = Vec3::new(0.0, 1.0, 0.0);
+        let ez = Vec3::new(0.0, 0.0, 1.0);
+        assert_eq!(ex.cross(ey), ez);
+        assert_eq!(ey.cross(ez), ex);
+        assert_eq!(ez.cross(ex), ey);
+    }
+
+    #[test]
+    fn vec3_cross_anticommutative() {
+        let a = Vec3::new(1.0, 2.0, 3.0);
+        let b = Vec3::new(4.0, 5.0, 6.0);
+        let ab = a.cross(b);
+        let ba = b.cross(a);
+        assert_relative_eq!(ab.x, -ba.x, max_relative = 1e-6, epsilon = 1e-7);
+        assert_relative_eq!(ab.y, -ba.y, max_relative = 1e-6, epsilon = 1e-7);
+        assert_relative_eq!(ab.z, -ba.z, max_relative = 1e-6, epsilon = 1e-7);
+    }
+
+    #[test]
+    fn vec3_cross_parallel_is_zero() {
+        let v = Vec3::new(1.0, 2.0, 3.0);
+        let c = v.cross(v * 3.7);
+        assert!(c.len_sq() < 1e-10, "cross(v, kv) = {c:?} should be zero");
+    }
+
+    #[test]
+    fn vec3_cross_perpendicular_to_inputs() {
+        let a = Vec3::new(1.0, 2.0, 3.0);
+        let b = Vec3::new(-1.0, 4.0, 0.5);
+        let c = a.cross(b);
+        assert!(
+            a.dot(c).abs() < 1e-5,
+            "a · (a×b) = {} should be 0",
+            a.dot(c)
+        );
+        assert!(
+            b.dot(c).abs() < 1e-5,
+            "b · (a×b) = {} should be 0",
+            b.dot(c)
+        );
+    }
+
+    #[test]
+    fn vec3_len_345() {
+        let v = Vec3::new(3.0, 4.0, 0.0);
+        assert_relative_eq!(v.len(), 5.0, max_relative = 1e-6);
+    }
+
+    #[test]
+    fn vec3_normalize_unit_length() {
+        let v = Vec3::new(3.0, -7.5, 2.1);
+        let n = v.normalize();
+        assert_relative_eq!(n.len(), 1.0, max_relative = 1.5e-7);
+    }
+
+    #[test]
+    fn vec3_normalize_direction_preserved() {
+        let v = Vec3::new(1.0, 2.0, 3.0);
+        let n = v.normalize();
+        assert!(v.dot(n) > 0.0);
+    }
+
+    #[test]
+    fn vec3_repr_c_layout() {
+        assert_eq!(
+            core::mem::size_of::<Vec3>(),
+            3 * core::mem::size_of::<f32>()
+        );
+        assert_eq!(core::mem::align_of::<Vec3>(), core::mem::align_of::<f32>());
+    }
+
+    #[test]
+    fn vec3_f32_slice_reinterpret() {
+        let vs = [Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0)];
+        let flat: &[f32] = unsafe { core::slice::from_raw_parts(vs.as_ptr() as *const f32, 6) };
+        assert_eq!(flat, &[1.0_f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    }
+}
