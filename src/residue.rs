@@ -22,8 +22,7 @@ pub trait SidechainCoords: Copy + 'static {
 /// Given the three backbone anchor coordinates (N, Cα, C) and a set of χ
 /// dihedral angles plus optional polar-hydrogen rotation angles, the
 /// inherent `build` method on each concrete type returns the full set of
-/// non-backbone atom coordinates using the NERF algorithm with DREIDING
-/// ideal geometry.
+/// non-backbone atom coordinates using the NERF algorithm.
 ///
 /// The trait is `sealed` — only the 29 residue types
 /// defined in this crate implement it.
