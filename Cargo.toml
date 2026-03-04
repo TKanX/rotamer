@@ -13,6 +13,7 @@ readme = "README.md"
 [dev-dependencies]
 approx = "0.5.1"
 criterion = "0.5.1"
+dunbrack = "0.1.0"
 paste = "1.0.15"
 
 [lib]
