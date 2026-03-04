@@ -22,7 +22,7 @@ fn rsqrtf(x: f32) -> f32 {
 ///
 /// Maximum absolute error over `[−2π, 2π]` is below `5 × 10⁻⁷`.
 #[inline(always)]
-pub fn sincosf(x: f32) -> (f32, f32) {
+pub fn sincosf(x: f32) -> TrigPair {
     let t = x * FRAC_2_PI;
     let j = (t + f32::copysign(0.5, t)) as i32;
     let r = x - j as f32 * FRAC_PI_2;
@@ -54,7 +54,17 @@ pub fn sincosf(x: f32) -> (f32, f32) {
     let sin_out = f32::from_bits(s_bits ^ (0u32.wrapping_sub(s_neg) & SIGN));
     let cos_out = f32::from_bits(c_bits ^ (0u32.wrapping_sub(c_neg) & SIGN));
 
-    (sin_out, cos_out)
+    TrigPair {
+        cos: cos_out,
+        sin: sin_out,
+    }
+}
+
+/// A `(cos θ, sin θ)` pair produced by [`sincosf`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TrigPair {
+    pub cos: f32,
+    pub sin: f32,
 }
 
 /// A three-component single-precision floating-point vector.
@@ -203,21 +213,21 @@ mod tests {
 
     #[test]
     fn sincosf_zero() {
-        let (s, c) = sincosf(0.0);
+        let TrigPair { sin: s, cos: c } = sincosf(0.0);
         assert_relative_eq!(s, 0.0, max_relative = 5e-7, epsilon = 1e-7);
         assert_relative_eq!(c, 1.0, max_relative = 5e-7);
     }
 
     #[test]
     fn sincosf_pi_over_6() {
-        let (s, c) = sincosf(core::f32::consts::FRAC_PI_6);
+        let TrigPair { sin: s, cos: c } = sincosf(core::f32::consts::FRAC_PI_6);
         assert_relative_eq!(s, 0.5, max_relative = 5e-7);
         assert_relative_eq!(c, 3.0_f32.sqrt() / 2.0, max_relative = 5e-7);
     }
 
     #[test]
     fn sincosf_pi_over_4() {
-        let (s, c) = sincosf(core::f32::consts::FRAC_PI_4);
+        let TrigPair { sin: s, cos: c } = sincosf(core::f32::consts::FRAC_PI_4);
         let root2_over2 = core::f32::consts::FRAC_1_SQRT_2;
         assert_relative_eq!(s, root2_over2, max_relative = 5e-7);
         assert_relative_eq!(c, root2_over2, max_relative = 5e-7);
@@ -225,21 +235,21 @@ mod tests {
 
     #[test]
     fn sincosf_pi_over_2() {
-        let (s, c) = sincosf(FRAC_PI_2);
+        let TrigPair { sin: s, cos: c } = sincosf(FRAC_PI_2);
         assert_relative_eq!(s, 1.0, max_relative = 5e-7);
         assert_relative_eq!(c, 0.0, max_relative = 5e-7, epsilon = 1e-7);
     }
 
     #[test]
     fn sincosf_pi() {
-        let (s, c) = sincosf(core::f32::consts::PI);
+        let TrigPair { sin: s, cos: c } = sincosf(core::f32::consts::PI);
         assert_relative_eq!(s, 0.0, max_relative = 5e-7, epsilon = 1e-7);
         assert_relative_eq!(c, -1.0, max_relative = 5e-7);
     }
 
     #[test]
     fn sincosf_3pi_over_2() {
-        let (s, c) = sincosf(3.0 * FRAC_PI_2);
+        let TrigPair { sin: s, cos: c } = sincosf(3.0 * FRAC_PI_2);
         assert_relative_eq!(s, -1.0, max_relative = 5e-7);
         assert_relative_eq!(c, 0.0, max_relative = 5e-7, epsilon = 1e-7);
     }
@@ -247,8 +257,8 @@ mod tests {
     #[test]
     fn sincosf_sin_odd() {
         for &x in &[0.3_f32, 1.0, 2.5, core::f32::consts::PI] {
-            let (s_pos, _) = sincosf(x);
-            let (s_neg, _) = sincosf(-x);
+            let TrigPair { sin: s_pos, .. } = sincosf(x);
+            let TrigPair { sin: s_neg, .. } = sincosf(-x);
             assert_relative_eq!(s_neg, -s_pos, max_relative = 1e-6, epsilon = 1e-7);
         }
     }
@@ -256,8 +266,8 @@ mod tests {
     #[test]
     fn sincosf_cos_even() {
         for &x in &[0.3_f32, 1.0, 2.5, core::f32::consts::PI] {
-            let (_, c_pos) = sincosf(x);
-            let (_, c_neg) = sincosf(-x);
+            let TrigPair { cos: c_pos, .. } = sincosf(x);
+            let TrigPair { cos: c_neg, .. } = sincosf(-x);
             assert_relative_eq!(c_neg, c_pos, max_relative = 1e-6, epsilon = 1e-7);
         }
     }
@@ -282,7 +292,7 @@ mod tests {
             3.0 * FRAC_PI_2,
         ];
         for &x in test_angles {
-            let (s, c) = sincosf(x);
+            let TrigPair { sin: s, cos: c } = sincosf(x);
             let norm_sq = s * s + c * c;
             assert!(
                 (norm_sq - 1.0).abs() < 1e-6,
@@ -294,13 +304,13 @@ mod tests {
 
     #[test]
     fn sincosf_quadrant_signs() {
-        let (s, c) = sincosf(core::f32::consts::FRAC_PI_4);
+        let TrigPair { sin: s, cos: c } = sincosf(core::f32::consts::FRAC_PI_4);
         assert!(s > 0.0 && c > 0.0);
-        let (s, c) = sincosf(3.0 * core::f32::consts::FRAC_PI_4);
+        let TrigPair { sin: s, cos: c } = sincosf(3.0 * core::f32::consts::FRAC_PI_4);
         assert!(s > 0.0 && c < 0.0);
-        let (s, c) = sincosf(-3.0 * core::f32::consts::FRAC_PI_4);
+        let TrigPair { sin: s, cos: c } = sincosf(-3.0 * core::f32::consts::FRAC_PI_4);
         assert!(s < 0.0 && c < 0.0);
-        let (s, c) = sincosf(-core::f32::consts::FRAC_PI_4);
+        let TrigPair { sin: s, cos: c } = sincosf(-core::f32::consts::FRAC_PI_4);
         assert!(s < 0.0 && c > 0.0);
     }
 
@@ -312,7 +322,7 @@ mod tests {
         let range = 2.0 * core::f32::consts::PI;
         for i in 0..=n {
             let x = -range + 2.0 * range * i as f32 / n as f32;
-            let (s, c) = sincosf(x);
+            let TrigPair { sin: s, cos: c } = sincosf(x);
             let err_s = (s - x.sin()).abs();
             let err_c = (c - x.cos()).abs();
             if err_s > max_err_sin {

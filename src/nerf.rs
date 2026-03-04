@@ -1,4 +1,4 @@
-use crate::math::Vec3;
+use crate::math::{TrigPair, Vec3};
 
 /// Places atom D given reference frame A–B–C.
 ///
@@ -7,31 +7,22 @@ use crate::math::Vec3;
 /// Returns the unique point D such that:
 ///
 /// - `|C − D| = d`
-/// - `∠BCD = arccos(cos_theta)` where `sin_theta = sin(∠BCD) > 0`
-/// - `dihedral(A, B, C, D) = arctan2(sin_phi, cos_phi)`
+/// - `∠BCD = arccos(theta.cos)` where `theta.sin = sin(∠BCD) > 0`
+/// - `dihedral(A, B, C, D) = arctan2(phi.sin, phi.cos)`
 ///
 /// # Preconditions
 ///
 /// - A, B, C must not be collinear (zero cross product → undefined frame).
-/// - `sin_theta > 0` (the bond angle must not be 0° or 180°).
+/// - `theta.sin > 0` (the bond angle must not be 0° or 180°).
 /// - `d > 0`.
 ///
 /// Violating any precondition yields an unspecified but defined (non-UB) result.
 #[inline(always)]
-pub fn place(
-    a: Vec3,
-    b: Vec3,
-    c: Vec3,
-    d: f32,
-    cos_theta: f32,
-    sin_theta: f32,
-    cos_phi: f32,
-    sin_phi: f32,
-) -> Vec3 {
+pub fn place(a: Vec3, b: Vec3, c: Vec3, d: f32, theta: TrigPair, phi: TrigPair) -> Vec3 {
     let bc = (c - b).normalize();
     let n = (b - a).cross(bc).normalize();
     let m = n.cross(bc);
-    c + (bc * -cos_theta + m * (sin_theta * cos_phi) - n * (sin_theta * sin_phi)) * d
+    c + (bc * -theta.cos + m * (theta.sin * phi.cos) - n * (theta.sin * phi.sin)) * d
 }
 
 #[cfg(test)]
@@ -58,8 +49,21 @@ mod tests {
     #[test]
     fn place_bond_length() {
         for phi_deg in [0.0_f32, 60.0, 120.0, 180.0, -120.0, -60.0] {
-            let (sp, cp) = (phi_deg.to_radians().sin(), phi_deg.to_radians().cos());
-            let d = place(A, B, C, D_BOND, COS_TET, SIN_TET, cp, sp);
+            let phi = TrigPair {
+                cos: phi_deg.to_radians().cos(),
+                sin: phi_deg.to_radians().sin(),
+            };
+            let d = place(
+                A,
+                B,
+                C,
+                D_BOND,
+                TrigPair {
+                    cos: COS_TET,
+                    sin: SIN_TET,
+                },
+                phi,
+            );
             let got = (d - C).len();
             assert_relative_eq!(got, D_BOND, max_relative = 1e-5, epsilon = 1e-5);
         }
@@ -68,8 +72,21 @@ mod tests {
     #[test]
     fn place_bond_angle() {
         for phi_deg in [0.0_f32, 60.0, 120.0, 180.0, -120.0, -60.0] {
-            let (sp, cp) = (phi_deg.to_radians().sin(), phi_deg.to_radians().cos());
-            let d = place(A, B, C, D_BOND, COS_TET, SIN_TET, cp, sp);
+            let phi = TrigPair {
+                cos: phi_deg.to_radians().cos(),
+                sin: phi_deg.to_radians().sin(),
+            };
+            let d = place(
+                A,
+                B,
+                C,
+                D_BOND,
+                TrigPair {
+                    cos: COS_TET,
+                    sin: SIN_TET,
+                },
+                phi,
+            );
             let cb_hat = (B - C).normalize();
             let cd_hat = (d - C).normalize();
             let cos_angle = cb_hat.dot(cd_hat);
@@ -81,7 +98,20 @@ mod tests {
     fn place_dihedral_roundtrip() {
         for phi_deg in [0.0_f32, 60.0, 120.0, 180.0, -120.0, -60.0, -1.0, 37.3] {
             let phi = phi_deg.to_radians();
-            let d = place(A, B, C, D_BOND, COS_TET, SIN_TET, phi.cos(), phi.sin());
+            let d = place(
+                A,
+                B,
+                C,
+                D_BOND,
+                TrigPair {
+                    cos: COS_TET,
+                    sin: SIN_TET,
+                },
+                TrigPair {
+                    cos: phi.cos(),
+                    sin: phi.sin(),
+                },
+            );
             let phi_out = dihedral(A, B, C, d);
             let diff = (phi_out - phi + 3.0 * PI).rem_euclid(2.0 * PI) - PI;
             assert!(
@@ -96,8 +126,31 @@ mod tests {
 
     #[test]
     fn place_cis_trans() {
-        let d_cis = place(A, B, C, D_BOND, COS_TET, SIN_TET, 1.0, 0.0);
-        let d_trans = place(A, B, C, D_BOND, COS_TET, SIN_TET, -1.0, 0.0);
+        let d_cis = place(
+            A,
+            B,
+            C,
+            D_BOND,
+            TrigPair {
+                cos: COS_TET,
+                sin: SIN_TET,
+            },
+            TrigPair { cos: 1.0, sin: 0.0 },
+        );
+        let d_trans = place(
+            A,
+            B,
+            C,
+            D_BOND,
+            TrigPair {
+                cos: COS_TET,
+                sin: SIN_TET,
+            },
+            TrigPair {
+                cos: -1.0,
+                sin: 0.0,
+            },
+        );
 
         let a_perp_y = A.y - C.y;
         let cis_perp_y = d_cis.y - C.y;
@@ -134,10 +187,14 @@ mod tests {
             ca,
             c_atom,
             d,
-            cos_theta,
-            sin_theta,
-            phi.cos(),
-            phi.sin(),
+            TrigPair {
+                cos: cos_theta,
+                sin: sin_theta,
+            },
+            TrigPair {
+                cos: phi.cos(),
+                sin: phi.sin(),
+            },
         );
         let err = (o_calc - o_ref).len();
         assert!(
@@ -165,10 +222,14 @@ mod tests {
             n_atom,
             ca,
             d,
-            cos_theta,
-            sin_theta,
-            phi.cos(),
-            phi.sin(),
+            TrigPair {
+                cos: cos_theta,
+                sin: sin_theta,
+            },
+            TrigPair {
+                cos: phi.cos(),
+                sin: phi.sin(),
+            },
         );
         let err = (cb_calc - cb_ref).len();
         assert!(
