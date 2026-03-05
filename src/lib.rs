@@ -5,6 +5,8 @@ mod nerf;
 mod residue;
 mod sealed;
 
+include!(concat!(env!("OUT_DIR"), "/generated.rs"));
+
 pub use math::Vec3;
 pub use residue::{
     Ala, Arg, Arn, Ash, Asn, Asp, Cym, Cys, Cyx, Glh, Gln, Glu, Gly, Hid, Hie, Hip, Ile, Leu, Lyn,
