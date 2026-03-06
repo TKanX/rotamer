@@ -1,0 +1,117 @@
+use super::{AtomSpec, ResidueSpec, TorsionSrc};
+
+const ATOMS: &[AtomSpec] = &[
+    AtomSpec {
+        name: "CB",
+        refs: ["C", "N", "CA"],
+        bond_length: 1.5287,
+        bond_angle: 109.4703,
+        torsion: TorsionSrc::Fixed(120.0410),
+    },
+    AtomSpec {
+        name: "CG",
+        refs: ["N", "CA", "CB"],
+        bond_length: 1.5062,
+        bond_angle: 109.4975,
+        torsion: TorsionSrc::Chi(0),
+    },
+    AtomSpec {
+        name: "CD1",
+        refs: ["CA", "CB", "CG"],
+        bond_length: 1.3823,
+        bond_angle: 119.9470,
+        torsion: TorsionSrc::Chi(1),
+    },
+    AtomSpec {
+        name: "CD2",
+        refs: ["CD1", "CB", "CG"],
+        bond_length: 1.3830,
+        bond_angle: 119.9427,
+        torsion: TorsionSrc::Fixed(-179.6919),
+    },
+    AtomSpec {
+        name: "CE1",
+        refs: ["CB", "CG", "CD1"],
+        bond_length: 1.3810,
+        bond_angle: 120.0729,
+        torsion: TorsionSrc::Fixed(179.9764),
+    },
+    AtomSpec {
+        name: "CE2",
+        refs: ["CB", "CG", "CD2"],
+        bond_length: 1.3809,
+        bond_angle: 120.0203,
+        torsion: TorsionSrc::Fixed(-179.7745),
+    },
+    AtomSpec {
+        name: "CZ",
+        refs: ["CG", "CD1", "CE1"],
+        bond_length: 1.3867,
+        bond_angle: 119.9781,
+        torsion: TorsionSrc::Fixed(0.1021),
+    },
+    AtomSpec {
+        name: "OH",
+        refs: ["CD1", "CE1", "CZ"],
+        bond_length: 1.3582,
+        bond_angle: 120.1300,
+        torsion: TorsionSrc::Fixed(179.9659),
+    },
+    AtomSpec {
+        name: "HB2",
+        refs: ["CG", "CA", "CB"],
+        bond_length: 1.0893,
+        bond_angle: 109.5118,
+        torsion: TorsionSrc::Fixed(-120.1033),
+    },
+    AtomSpec {
+        name: "HB3",
+        refs: ["CG", "CA", "CB"],
+        bond_length: 1.0909,
+        bond_angle: 109.4603,
+        torsion: TorsionSrc::Fixed(119.9886),
+    },
+    AtomSpec {
+        name: "HD1",
+        refs: ["CE1", "CG", "CD1"],
+        bond_length: 1.0793,
+        bond_angle: 119.9415,
+        torsion: TorsionSrc::Fixed(179.9959),
+    },
+    AtomSpec {
+        name: "HD2",
+        refs: ["CE2", "CG", "CD2"],
+        bond_length: 1.0795,
+        bond_angle: 119.9964,
+        torsion: TorsionSrc::Fixed(179.5307),
+    },
+    AtomSpec {
+        name: "HE1",
+        refs: ["CZ", "CD1", "CE1"],
+        bond_length: 1.0795,
+        bond_angle: 120.0572,
+        torsion: TorsionSrc::Fixed(179.9439),
+    },
+    AtomSpec {
+        name: "HE2",
+        refs: ["CZ", "CD2", "CE2"],
+        bond_length: 1.0800,
+        bond_angle: 120.0442,
+        torsion: TorsionSrc::Fixed(-179.8350),
+    },
+    AtomSpec {
+        name: "HH",
+        refs: ["CE1", "CZ", "OH"],
+        bond_length: 0.9664,
+        bond_angle: 106.8813,
+        torsion: TorsionSrc::PolarH(0, 0.0),
+    },
+];
+
+pub const SPEC: ResidueSpec = ResidueSpec {
+    name: "TYR",
+    type_name: "Tyr",
+    n_chi: 2,
+    n_polar_h: 1,
+    atoms: ATOMS,
+};
