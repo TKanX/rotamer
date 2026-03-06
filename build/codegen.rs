@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 use std::fs;
 use std::path::PathBuf;
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::residues::{ALL_RESIDUES, AtomSpec, ResidueSpec, TorsionSrc};
@@ -29,11 +29,14 @@ pub fn generate() {
     let dest = out_dir.join("generated.rs");
 
     let blocks: Vec<TokenStream> = ALL_RESIDUES.iter().map(emit_residue).collect();
-    let tokens = quote! { #(#blocks)* };
+    let for_all = emit_for_all_sidechains_macro();
+    let tokens = quote! { #(#blocks)* #for_all };
 
-    let formatted = prettyplease::unparse(&syn::parse2(tokens).expect("invalid Rust"));
-
-    fs::write(&dest, formatted).expect("failed to write generated.rs");
+    fs::write(
+        &dest,
+        prettyplease::unparse(&syn::parse2(tokens).expect("invalid Rust")),
+    )
+    .expect("failed to write generated.rs");
 }
 
 fn emit_residue(res: &ResidueSpec) -> TokenStream {
@@ -194,7 +197,7 @@ fn emit_placement(atom: &AtomSpec) -> TokenStream {
             let phi = format_ident!("chi{i}");
             quote! { let #var = place(#ra, #rb, #rc, #d, #theta, #phi); }
         }
-        TorsionSrc::PolarH(i, offset) if offset == 0.0 => {
+        TorsionSrc::PolarH(i, 0.0) => {
             let phi = format_ident!("ph{i}");
             quote! { let #var = place(#ra, #rb, #rc, #d, #theta, #phi); }
         }
@@ -267,5 +270,46 @@ fn validate_refs(res: &ResidueSpec) {
         );
 
         known.insert(atom.name);
+    }
+}
+
+fn emit_for_all_sidechains_macro() -> TokenStream {
+    let arms: Vec<TokenStream> = ALL_RESIDUES
+        .iter()
+        .map(|res| {
+            let ty = Ident::new(res.type_name, Span::call_site());
+            let n_chi = Literal::usize_unsuffixed(res.n_chi);
+            let n_ph = Literal::usize_unsuffixed(res.n_polar_h);
+            let n = Literal::usize_unsuffixed(res.atoms.len());
+            quote! { $callback!(#ty, #n_chi, #n_ph, #n); }
+        })
+        .collect();
+
+    quote! {
+        /// Invokes `$callback!(Type, N_CHI, N_POLAR_H, N)` for each of the 29
+        /// sidechain types.
+        ///
+        /// The callback macro receives:
+        /// - `Type` — the zero-sized residue type (e.g. `Ser`)
+        /// - `N_CHI` — number of χ dihedral angles (literal)
+        /// - `N_POLAR_H` — number of polar-hydrogen torsions (literal)
+        /// - `N` — total number of sidechain atoms (literal)
+        ///
+        /// # Examples
+        ///
+        /// ```ignore
+        /// macro_rules! print_name {
+        ///     ($T:ident, $nc:literal, $np:literal, $n:literal) => {
+        ///         println!("{}", <$T as Sidechain>::NAME);
+        ///     };
+        /// }
+        /// for_all_sidechains!(print_name);
+        /// ```
+        #[macro_export]
+        macro_rules! for_all_sidechains {
+            ($callback:ident) => {
+                #(#arms)*
+            };
+        }
     }
 }
