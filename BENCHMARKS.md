@@ -105,7 +105,7 @@ Time to query all 37 × 37 = 1,369 (φ, ψ) grid points via `dunbrack`, then cal
 
 Each `build()` executes two kinds of work:
 
-- **N × `place()`** — one NERF placement per atom: two `normalize()` (each containing `rsqrtf` via Quake III bit-trick + 3 Newton–Raphson steps), one `cross()`, three `mul_scalar()`, and one final `add()`. Roughly 30 FP ops per atom.
+- **N × `place()`** — one NERF placement per atom: two `normalize()` (each containing `rsqrtf` via Quake III bit-trick + 3 Newton–Raphson steps), two `cross()`, three `mul_scalar()`, and one final `add()`. Roughly 30 FP ops per atom.
 - **(N_CHI + N_PH) × `sincosf()`** — custom branchless minimax polynomial (degree 9 sin, degree 8 cos, quadrant folding via bit manipulation). Called once per runtime torsion angle.
 
 Approximate model: `time ≈ N × 10 ns + (N_CHI + N_PH) × 20 ns`
