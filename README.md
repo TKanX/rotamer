@@ -241,14 +241,14 @@ The library is verified at three levels:
 
 **Integration tests** (227 tests in `tests/`):
 
-| File           | Tests | What is verified                                                                                                 |
-| :------------- | :---: | :--------------------------------------------------------------------------------------------------------------- |
-| `smoke.rs`     |  29   | All 29 types build without panic; atom count matches; all coordinates finite and non-NaN                         |
-| `constants.rs` |  29   | `N_CHI`, `N_POLAR_H`, `N`, `NAME` match declared values for all 29 types                                         |
-| `bond.rs`      |  30   | Adjacent-atom distances match ideal bond lengths (±0.02 Å) across full 37×37 (φ, ψ) grid with Dunbrack χ values  |
-| `chirality.rs` |  60   | L-amino acid CB chirality sign correct; spot checks + 37×37 grid with Dunbrack χ values for all 28 non-Gly types |
-| `geometry.rs`  |  62   | χ dihedral round-trip (< 5×10⁻⁴ rad) across uniform χ sampling + 37×37 grid; polar-H dihedral round-trip         |
-| `ring.rs`      |  17   | Ring closure gap (placed vs expected distance) < 0.05 Å aromatic, < 0.50 Å proline; all 8 ring-bearing residues  |
+| File           | Tests | What is verified                                                                                                     |
+| :------------- | :---: | :------------------------------------------------------------------------------------------------------------------- |
+| `smoke.rs`     |  29   | All 29 types build without panic; atom count matches; all coordinates finite and non-NaN                             |
+| `constants.rs` |  29   | `N_CHI`, `N_POLAR_H`, `N`, `NAME` match declared values for all 29 types                                             |
+| `bond.rs`      |  30   | All sidechain atoms have at least one neighbor within 2.1 Å across the full 37×37 (φ, ψ) grid with Dunbrack χ values |
+| `chirality.rs` |  60   | L-amino acid CB chirality sign correct; spot checks + 37×37 grid with Dunbrack χ values for all 28 non-Gly types     |
+| `geometry.rs`  |  62   | χ dihedral round-trip (< 5×10⁻⁴ rad) across uniform χ sampling + 37×37 grid; polar-H dihedral round-trip             |
+| `ring.rs`      |  17   | Ring closure gap (placed vs expected distance) < 0.05 Å aromatic, < 0.50 Å proline; all 8 ring-bearing residues      |
 
 Total: **264 tests** + **58 criterion benchmarks**.
 
