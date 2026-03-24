@@ -24,7 +24,7 @@ Generates all sidechain atom coordinates (heavy atoms + hydrogens) for 29 amino 
 
 ```toml
 [dependencies]
-rotamer = "0.1.0"
+rotamer = "0.2.0"
 ```
 
 **Note:** `build.rs` generates all 29 `build()` functions from the residue specifications in `build/residues/`. Initial compilation takes a few seconds.
