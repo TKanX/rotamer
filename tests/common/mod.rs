@@ -16,8 +16,7 @@ pub fn dihedral(a: Vec3, b: Vec3, c: Vec3, d: Vec3) -> f32 {
     let b2 = c - b;
     let n1 = (b - a).cross(b2);
     let n2 = b2.cross(d - c);
-    let m1 = n1.cross(b2.normalize());
-    f32::atan2(m1.dot(n2), n1.dot(n2))
+    f32::atan2(b2.len() * (b - a).dot(n2), n1.dot(n2))
 }
 
 #[inline]

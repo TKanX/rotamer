@@ -6,7 +6,7 @@ const ATOMS: &[AtomSpec] = &[
         refs: ["C", "N", "CA"],
         bond_length: 1.5290,
         bond_angle: 109.4115,
-        torsion: TorsionSrc::Fixed(120.0002),
+        torsion: TorsionSrc::Fixed(-120.0002),
     },
     AtomSpec {
         name: "OG1",
@@ -20,14 +20,14 @@ const ATOMS: &[AtomSpec] = &[
         refs: ["OG1", "CA", "CB"],
         bond_length: 1.5301,
         bond_angle: 109.5255,
-        torsion: TorsionSrc::Fixed(120.0308),
+        torsion: TorsionSrc::Fixed(-120.0308),
     },
     AtomSpec {
         name: "HB",
         refs: ["OG1", "CA", "CB"],
         bond_length: 1.0898,
         bond_angle: 109.4276,
-        torsion: TorsionSrc::Fixed(-119.9922),
+        torsion: TorsionSrc::Fixed(119.9922),
     },
     AtomSpec {
         name: "HG1",
@@ -41,21 +41,21 @@ const ATOMS: &[AtomSpec] = &[
         refs: ["OG1", "CB", "CG2"],
         bond_length: 1.0893,
         bond_angle: 109.4779,
-        torsion: TorsionSrc::Fixed(-59.9996),
+        torsion: TorsionSrc::Fixed(59.9996),
     },
     AtomSpec {
         name: "HG22",
         refs: ["OG1", "CB", "CG2"],
         bond_length: 1.0901,
         bond_angle: 109.4679,
-        torsion: TorsionSrc::Fixed(-179.9932),
+        torsion: TorsionSrc::Fixed(179.9932),
     },
     AtomSpec {
         name: "HG23",
         refs: ["OG1", "CB", "CG2"],
         bond_length: 1.0888,
         bond_angle: 109.4591,
-        torsion: TorsionSrc::Fixed(60.0221),
+        torsion: TorsionSrc::Fixed(-60.0221),
     },
 ];
 

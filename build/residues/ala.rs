@@ -6,28 +6,28 @@ const ATOMS: &[AtomSpec] = &[
         refs: ["C", "N", "CA"],
         bond_length: 1.5294,
         bond_angle: 109.4645,
-        torsion: TorsionSrc::Fixed(119.9991),
+        torsion: TorsionSrc::Fixed(-119.9991),
     },
     AtomSpec {
         name: "HB1",
         refs: ["N", "CA", "CB"],
         bond_length: 1.0907,
         bond_angle: 109.4905,
-        torsion: TorsionSrc::Fixed(59.9713),
+        torsion: TorsionSrc::Fixed(-59.9713),
     },
     AtomSpec {
         name: "HB2",
         refs: ["N", "CA", "CB"],
         bond_length: 1.0899,
         bond_angle: 109.4323,
-        torsion: TorsionSrc::Fixed(-59.9976),
+        torsion: TorsionSrc::Fixed(59.9976),
     },
     AtomSpec {
         name: "HB3",
         refs: ["N", "CA", "CB"],
         bond_length: 1.0901,
         bond_angle: 109.5239,
-        torsion: TorsionSrc::Fixed(179.9612),
+        torsion: TorsionSrc::Fixed(-179.9612),
     },
 ];
 

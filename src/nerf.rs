@@ -22,7 +22,7 @@ pub fn place(a: Vec3, b: Vec3, c: Vec3, d: f32, theta: TrigPair, phi: TrigPair) 
     let bc = (c - b).normalize();
     let n = (b - a).cross(bc).normalize();
     let m = n.cross(bc);
-    c + (bc * -theta.cos + m * (theta.sin * phi.cos) - n * (theta.sin * phi.sin)) * d
+    c + (bc * -theta.cos + m * (theta.sin * phi.cos) + n * (theta.sin * phi.sin)) * d
 }
 
 #[cfg(test)]
@@ -35,8 +35,7 @@ mod tests {
         let b2 = c - b;
         let n1 = (b - a).cross(b2);
         let n2 = b2.cross(d - c);
-        let m1 = n1.cross(b2.normalize());
-        f32::atan2(m1.dot(n2), n1.dot(n2))
+        f32::atan2(b2.len() * (b - a).dot(n2), n1.dot(n2))
     }
 
     const A: Vec3 = Vec3::new(0.0, 1.0, 0.0);
